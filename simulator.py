@@ -1,0 +1,78 @@
+from deck import Deck, Card
+from hand import Hand
+import random
+from collections import Counter
+
+class Simulator():
+    hand: Hand
+    deck: Deck
+    discard_cap = 5
+
+    def __init__(self, hand, deck):
+        self.hand = hand
+        self.deck = deck
+
+    def monte_carlo_random_discard(self, simulations=10000):
+        results = Counter()
+
+        for _ in range(simulations):
+            current_hand = self.hand
+            current_deck = self.deck
+            current_deck.shuffle()
+
+            # Choose number of cards to discard
+            num_discards = random.randint(0, min(self.discard_cap, len(current_hand)))
+
+            # Randomly pick discard indices
+            discard_indices = random.sample(range(len(current_hand)), num_discards)
+
+            # Remove the cards
+            kept = [card for i, card in enumerate(current_hand.cards) if i not in discard_indices]
+
+            # Draw new cards
+            drawn = current_deck.cards[:num_discards]
+            new_hand = Hand(kept + drawn)
+
+            # Evaluate new hand
+            hand_type = new_hand.eval_hand()
+            results[hand_type.name] += 1
+
+        return results
+
+    def monte_carlo_fix_discard(self, discards: list[Card], simulations=10000):
+        results = Counter()
+        num_discards = len(discards)
+        kept = [card for card in self.hand.cards if card not in discards]
+
+        for _ in range(simulations):
+            current_deck = self.deck
+            current_deck.shuffle()
+
+            # Draw new cards
+            drawn = current_deck.cards[:num_discards]
+            new_hand = Hand(kept + drawn)
+
+            # Evaluate new hand
+            hand_type = new_hand.eval_hand()
+            results[hand_type.name] += 1
+
+        return results
+
+    def monte_carlo_fix_discard_by_idx(self, discard_idx, simulations=10000):
+        results = Counter()
+        num_discards = len(discard_idx)
+        kept = [card for i, card in enumerate(self.hand.cards) if i not in discard_idx]
+
+        for _ in range(simulations):
+            current_deck = self.deck
+            current_deck.shuffle()
+
+            # Draw new cards
+            drawn = current_deck.cards[:num_discards]
+            new_hand = Hand(kept + drawn)
+
+            # Evaluate new hand
+            hand_type = new_hand.eval_hand()
+            results[hand_type.name] += 1
+
+        return results
